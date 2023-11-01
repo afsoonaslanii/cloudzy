@@ -1,7 +1,8 @@
 <template>
   <div v-if="data">
     <HeroHome :data="data" />
-    <PricingHome :data="data.pricingSection" />
+    <PricingHome id="pricing" :data="data.pricingSection" />
+    <MapHome :data="data.map" />
     <MostPopular :data="data.mostPopular" />
     <OurKeyDiffrence :data="data.ourKeyDiffrence" />
     <TestimonialHome :data="data.testimonial" />
@@ -14,3 +15,9 @@
   import type { HomeData } from '~/types/api/home'
   const { data } = await useFetch<HomeData>('/api/home')
 </script>
+
+<style>
+  html {
+    scroll-behavior: smooth;
+  }
+</style>

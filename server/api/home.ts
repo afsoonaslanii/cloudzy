@@ -5,7 +5,7 @@ export default defineEventHandler(() => {
       description:
         'Instantly create High-Performance Cloud VPS services worldwide with NVMe SSD storage and 10Gbps connections at a fraction of cost.',
       action: { content: 'starting from $4.95', link: '/' },
-      image: '/hero-home.webp',
+      image: 'hero-home.webp',
     },
     pricingSection: {
       linux: [
@@ -549,52 +549,52 @@ export default defineEventHandler(() => {
     },
     mostPopular: [
       {
-        serviceName: 'Windows',
-        serviceIcon: 'most-popular-services/window.svg',
+        title: 'Windows',
+        icon: 'most-popular-services/window.svg',
         serviceDescriptionContent: {
           title: 'Efficient Windows VPS Hosting Solutions',
           description: `Want free windows with that? Cloudzy’s cost-effective and powerful Windows VPS plans come with whatever Windows version you want, like Windows Server 2022 or Windows Server 2012 — for FREE.`,
           action: {
             content: 'See Windows VPS Plans',
-            link: '/windows-vps/',
+            link: '/',
           },
         },
       },
       {
-        serviceName: 'Linux',
-        serviceIcon: 'most-popular-services/linux.svg',
+        title: 'Linux',
+        icon: 'most-popular-services/linux.svg',
         serviceDescriptionContent: {
           title: 'Affordable, High-Performance Linux VPS Solutions',
           description:
             'Get your KVM-powered Linux Virtual Cloud Server with the Linux distro of your choice installed at no extra charge. Supercharge your services with state-of-the-art infrastructure, ultra-fast connection, and SSD storage at affordable prices﹣and we mean really affordable.',
           action: {
             content: 'See Linux VPS Plans',
-            link: '/linux-vps/',
+            link: '/',
           },
         },
       },
       {
-        serviceName: 'RDP',
-        serviceIcon: 'most-popular-services/rdp.svg',
+        title: 'RDP',
+        icon: 'most-popular-services/rdp.svg',
         serviceDescriptionContent: {
           title: 'Easy and Reliable Remote Desktop Solutions',
           description:
             'Want to launch your own Windows-powered remote desktop at a location of your choice? Buy one of our RDP Server Plans and get full root access to secure, stable, and easy-to-use RDP servers. Connect to your Remote Desktop wherever you are using your favorite RDP software. Did we mention the free Windows?',
           action: {
             content: 'See RDP Server Plans',
-            link: '/buy-rdp/',
+            link: '/',
           },
         },
       },
       {
-        serviceName: 'Forex',
-        serviceIcon: 'most-popular-services/forex.svg',
+        title: 'Forex',
+        icon: 'most-popular-services/forex.svg',
         serviceDescriptionContent: {
           title: 'Lightning-Fast, Minimal-Latency Forex VPS Solutions',
           description: `Hypersonic VPS hosting tailor-made for automated Forex trading. Minimize latency and get your Forex VPS as close to your broker as possible. Maximize your profits using our precision-engineered Forex Virtual Cloud Servers plans running on high-tech infrastructure at 15 strategic locations across the globe.`,
           action: {
             content: 'See Forex VPS Plans',
-            link: '/forex-vps/',
+            link: '/',
           },
         },
       },
@@ -646,5 +646,113 @@ export default defineEventHandler(() => {
         },
       ],
     },
+
+    map: [
+      {
+        title: 'USA VPS',
+        items: [
+          {
+            id: 'Chicago',
+            icon: 'map/usa.jpg',
+            link: '/',
+            name: 'Chicago',
+          },
+          {
+            id: 'Seattle',
+            icon: 'map/usa.jpg',
+            name: 'Seattle',
+            link: '/',
+          },
+          {
+            id: 'San_Francisco',
+            icon: 'map/usa.jpg',
+            name: 'San Francisco',
+            link: '/',
+          },
+          {
+            id: 'Los_Angeles',
+            name: 'Los Angeles',
+            icon: 'map/usa.jpg',
+            link: '/',
+          },
+          {
+            id: 'las_vegas',
+            icon: 'map/usa.jpg',
+            link: '/',
+            name: 'Las Vegas',
+          },
+          {
+            id: 'Phoenix',
+            icon: 'map/usa.jpg',
+            name: 'Phoenix',
+            link: '/',
+          },
+          {
+            id: 'Dallas',
+            name: 'Dallas',
+            icon: 'map/usa.jpg',
+            link: '/',
+          },
+          {
+            id: 'Miami',
+            icon: 'map/usa.jpg',
+            link: '/',
+            name: 'Miami',
+          },
+          {
+            id: 'New_York',
+            icon: 'map/usa.jpg',
+            link: '/',
+            name: 'New York',
+          },
+          {
+            id: 'Washington_D.C',
+            icon: 'map/usa.jpg',
+            link: '/',
+            name: 'Washington',
+          },
+        ],
+      },
+      {
+        title: 'Europe VPS',
+        items: [
+          {
+            id: 'luxembourg',
+            icon: 'map/luxembourg.jpg',
+            link: '/',
+            name: 'Luxembourg',
+          },
+          {
+            id: 'london',
+            icon: 'map/uk.jpg',
+            link: '/',
+            name: 'London',
+          },
+          {
+            id: 'Amsterdam',
+            icon: 'map/netherlands.jpg',
+            link: '/',
+            name: 'Amsterdam',
+          },
+          {
+            id: 'FrankFurt',
+            icon: 'map/netherlands.jpg',
+            link: '/',
+            name: 'Frankfurt',
+          },
+        ],
+      },
+      {
+        title: 'Asia VPS',
+        items: [
+          {
+            name: 'Singapore',
+            id: 'Singapore',
+            icon: 'map/singapore.jpg',
+            link: '/',
+          },
+        ],
+      },
+    ],
   }
 })

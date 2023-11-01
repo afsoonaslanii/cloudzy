@@ -7,8 +7,8 @@
       <div class="lg:w-[calc(100%-384px)]">
         <BaseTabs
           :items="data"
-          tab-style="bg-white-default"
-          content-style="bg-white-default"
+          tab-style="bg-white-default rounded"
+          content-style="bg-white-default flex flex-col justify-between items-start lg:min-h-[224px]"
         >
           <template #default="{ tab }">
             <h4 class="text-text-primary text-h6">

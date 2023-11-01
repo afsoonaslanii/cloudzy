@@ -15,7 +15,6 @@
 
         <!-- section 2 -->
         <div :class="[styles.slider.default, styles.slider.lg]">
-          <NuxtImg src="hero-home.webp" />
           <NuxtImg
             src="testimonial/TestimonialQuote.svg"
             :class="[

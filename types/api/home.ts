@@ -1,3 +1,5 @@
+import type { Tab } from '../generics/generics'
+
 export type HeroSection = {
   title: string
   description: string
@@ -83,8 +85,6 @@ export type LatestBlog = {
 
 //* ********************************************/
 type MostPopularService = {
-  serviceName: string
-  serviceIcon: string
   serviceDescriptionContent: {
     title: string
     description: string
@@ -93,9 +93,19 @@ type MostPopularService = {
       link: string
     }
   }
-}
+} & Tab
 
 export type MostPopularServices = MostPopularService[]
+
+export type Map = {
+  title: string
+  items: {
+    id: string
+    icon: string
+    link: string
+    name: string
+  }[]
+}
 
 export interface HomeData {
   heroSection: HeroSection
@@ -104,4 +114,5 @@ export interface HomeData {
   testimonial: Testimonial
   latestBlog: LatestBlog
   mostPopular: MostPopularServices
+  map: Map[]
 }

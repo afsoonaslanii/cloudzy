@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
   type propTypes = {
-    classes: string
+    classes?: string
   }
   const props = defineProps<propTypes>()
 </script>

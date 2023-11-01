@@ -12,12 +12,21 @@ export default defineNuxtConfig({
   ],
   googleFonts: {
     families: {
-      Roboto: true,
+      Roboto: {
+        wght: [100, 300, 400, 500, 700],
+      },
     },
     display: 'swap',
   },
-  image: {
-    dir: 'assets/images',
-    domains: ['https://cloudzy.vercel.app'],
+
+  app: {
+    head: {
+      meta: [
+        {
+          name: 'robots',
+          content: 'noindex, nofollow',
+        },
+      ],
+    },
   },
 })

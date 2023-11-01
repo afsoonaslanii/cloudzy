@@ -1,0 +1,101 @@
+stages:
+  - build
+  - deploy
+
+build-selfhosted-staging:
+  environment:
+    name: staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == "staging"
+      when: always
+  stage: build
+  before_script:
+    - docker builder prune -f || true
+    - docker volume rm $(docker volume ls -q) || true
+    - docker system prune -f || true
+  script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker pull "${CI_REGISTRY_IMAGE}":staging || docker pull "${CI_REGISTRY_IMAGE}":"${CI_COMMIT_REF_NAME}" || true
+    - docker pull "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_NAME}" || true
+    - DOCKER_BUILDKIT=1 docker build
+      --tag "$CI_REGISTRY_IMAGE":"${CI_COMMIT_SHA:0:8}" .
+    - docker push "${CI_REGISTRY_IMAGE}":"${CI_COMMIT_SHA:0:8}"
+    - docker tag "${CI_REGISTRY_IMAGE}":"${CI_COMMIT_SHA:0:8}" "${CI_REGISTRY_IMAGE}":"${CI_COMMIT_REF_NAME}"
+    - docker push "${CI_REGISTRY_IMAGE}":"${CI_COMMIT_REF_NAME}"
+    - docker logout "${CI_REGISTRY}"
+  tags:
+    - shell
+
+deploy-selfhosted-staging:
+  environment:
+    name: staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == "staging"
+      when: on_success
+  needs: [build-selfhosted-staging]
+  image: kroniak/ssh-client
+  stage: deploy
+  before_script:
+    - docker system prune -af || true
+  script:
+    - chmod 400 $MASTER_SSH_KEY
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY""
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY" "
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo docker pull ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA:0:8} || true"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo docker rm -f cloudzy-nuxt || true"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo docker network create $CI_PROJECT_NAME || true"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} --
+      sudo docker run
+      --name=cloudzy-nuxt
+      --restart=always
+      --network=$CI_PROJECT_NAME
+      -d ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA:0:8}
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo docker rmi -f \$(docker images -q ${CI_REGISTRY_IMAGE}) || true"
+  tags:
+    - shell
+
+deploy-proxy-staging:
+  environment:
+    name: staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == "staging"
+      when: manual
+  stage: deploy
+  before_script:
+    - docker system prune -af || true
+  script:
+    - chmod 400 $MASTER_SSH_KEY
+    - chmod +x scp_bastion-uk.sh
+    - scp -S ./scp_bastion-uk.sh -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -P ${MASTER_SSH_port} outer-nginx-stage.conf ${MASTER_SSH_USER}@${MASTER_HOST}:/tmp/
+    - scp -S ./scp_bastion-uk.sh -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -P ${MASTER_SSH_port} options-ssl-nginx.conf ${MASTER_SSH_USER}@${MASTER_HOST}:/tmp/
+    - scp -S ./scp_bastion-uk.sh -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -P ${MASTER_SSH_port} ${SITE_CA_PRI} ${MASTER_SSH_USER}@${MASTER_HOST}:/tmp/privkey-nuxt.pem
+    - scp -S ./scp_bastion-uk.sh -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -P ${MASTER_SSH_port} ${SITE_CA_FULL} ${MASTER_SSH_USER}@${MASTER_HOST}:/tmp/fullchain-nuxt.pem
+    - scp -S ./scp_bastion-uk.sh -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -P ${MASTER_SSH_port} ${SITE_CA_DHPAR} ${MASTER_SSH_USER}@${MASTER_HOST}:/tmp/ssl-dhparams.pem
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo mkdir -p /opt/${HOSTNAME}/nginx/"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo mkdir -p /opt/${HOSTNAME}/nginx/letsencrypt/live/${HOSTNAME}"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo mv -f /tmp/outer-nginx-stage.conf /opt/${HOSTNAME}/nginx/nginx.conf"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo mkdir -p /opt/${HOSTNAME}/nginx/log"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo mkdir -p /opt/${HOSTNAME}/nginx/data"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo mv -f /tmp/options-ssl-nginx.conf /opt/${HOSTNAME}/nginx/letsencrypt/options-ssl-nginx.conf"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo mv -f /tmp/privkey-nuxt.pem /opt/${HOSTNAME}/nginx/letsencrypt/live/${HOSTNAME}/privkey.pem"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo mv -f /tmp/fullchain-nuxt.pem /opt/${HOSTNAME}/nginx/letsencrypt/live/${HOSTNAME}/fullchain.pem"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo mv -f /tmp/ssl-dhparams.pem /opt/${HOSTNAME}/nginx/letsencrypt/ssl-dhparams.pem"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo chown -R root:root /opt/${HOSTNAME}"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo docker pull nginx:stable-alpine-perl || true"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo docker rm -f nginx || true"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} -- "sudo docker network create $CI_PROJECT_NAME || true"
+    - ssh -t ${BASTION_USER}@${BASTION_HOST} -o StrictHostKeyChecking=no -i $MASTER_SSH_KEY -- ${MASTER_SSH_USER}@${MASTER_HOST} -p ${MASTER_SSH_port} --
+      sudo docker run
+      --name=nginx
+      --restart=always
+      --network=$CI_PROJECT_NAME
+      -p 80:80
+      -p 443:443
+      -v /opt/${HOSTNAME}/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
+      -v /opt/${HOSTNAME}/nginx/nginx.conf:/etc/nginx/nginx.conf:ro      
+      -v /opt/${HOSTNAME}/nginx/letsencrypt:/etc/letsencrypt
+      -v /opt/${HOSTNAME}/nginx/log/:/var/log/nginx
+      -v /opt/${HOSTNAME}/nginx/data:/var/www/html 
+      -d nginx:stable-alpine-perl
+  tags:
+    - shell
